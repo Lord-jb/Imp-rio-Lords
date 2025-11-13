@@ -24,7 +24,7 @@ export interface Cliente {
 }
 
 export interface Campanha {
-  id: string;
+  id?: string;
   uid_cliente: string;
   nome_campanha: string;
   status: 'Ativa' | 'Pausada' | 'Finalizada';
@@ -33,76 +33,164 @@ export interface Campanha {
   metricas: {
     cliques: number;
     leads: number;
+    conversoes?: number;
+    cpc?: number;
+    cpl?: number;
+    roas?: number;
   };
+  periodo: {
+    inicio: any;
+    fim?: any;
+  };
+  plataforma?: string;
+  objetivo?: string;
+  observacoes?: string;
   createdAt: any;
   updatedAt: any;
 }
 
 export interface SolicitacaoDesign {
-  id: string;
+  id?: string;
   uid_cliente: string;
   titulo: string;
   briefing: string;
+  tipo: 'feed' | 'stories' | 'banner' | 'logo' | 'video' | 'outro';
+  dimensoes?: string;
   referencia_url?: string;
   prazo?: string;
-  status: 'novo' | 'em_producao' | 'revisao' | 'entregue';
+  prioridade: 'baixa' | 'media' | 'alta' | 'urgente';
+  status: 'novo' | 'em_producao' | 'revisao' | 'entregue' | 'cancelado';
+  responsavel?: string;
   entregas: Array<{
     nome: string;
     url: string;
     storagePath: string;
+    versao: number;
     entregueEm: any;
+  }>;
+  comentarios?: Array<{
+    autor: string;
+    mensagem: string;
+    data: any;
   }>;
   createdAt: any;
   updatedAt: any;
 }
 
 export interface Lead {
-  id: string;
+  id?: string;
   uid_cliente: string;
   nome: string;
   email: string;
   telefone: string;
   cidade: string;
+  origem?: string;
   status: 'novo' | 'contatado' | 'em_negociacao' | 'ganho' | 'perdido';
+  valor_potencial?: number;
+  observacoes?: string;
+  data_contato?: any;
+  data_conversao?: any;
   createdAt: any;
   updatedAt: any;
 }
 
 export interface Notificacao {
-  id: string;
+  id?: string;
   uid_cliente: string;
   mensagem: string;
-  tipo: 'info' | 'campanha' | 'design' | 'agenda' | 'arquivo';
+  tipo: 'info' | 'campanha' | 'design' | 'agenda' | 'arquivo' | 'lead' | 'financeiro';
   lido: boolean;
+  link?: string;
   createdAt: any;
 }
 
 export interface Agenda {
-  id: string;
+  id?: string;
   uid_cliente: string;
   data: string;
   hora: string;
   local: string;
   descricao: string;
+  tipo: 'gravacao' | 'reuniao' | 'entrega' | 'outro';
+  status: 'agendado' | 'confirmado' | 'realizado' | 'cancelado';
+  link_meet?: string;
   data_horario: any;
   createdAt: any;
   updatedAt: any;
 }
 
 export interface ArquivoCompartilhado {
-  id: string;
+  id?: string;
   uid_cliente: string;
   titulo: string;
   descricao: string;
+  categoria: 'contrato' | 'relatorio' | 'design' | 'video' | 'outro';
   storagePath: string;
   downloadURL: string;
+  tamanho?: number;
+  tipo_arquivo?: string;
   createdAt: any;
 }
 
 export interface Insight {
-  id: string;
+  id?: string;
   titulo: string;
   descricao: string;
+  categoria: 'dica' | 'oferta' | 'atualizacao' | 'tendencia';
   ativo: boolean;
+  destaque?: boolean;
+  link_externo?: string;
   createdAt: any;
+  updatedAt: any;
+}
+
+export interface Ideia {
+  id?: string;
+  uid_cliente: string;
+  titulo: string;
+  descricao: string;
+  categoria?: string;
+  status: 'novo' | 'em_analise' | 'aprovado' | 'implementado' | 'arquivado';
+  prioridade?: 'baixa' | 'media' | 'alta';
+  resposta_admin?: string;
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface Financeiro {
+  id?: string;
+  uid_cliente: string;
+  tipo: 'credito' | 'debito';
+  valor: number;
+  descricao: string;
+  categoria: 'trafego' | 'plano' | 'extra' | 'estorno';
+  referencia?: string;
+  saldo_anterior: number;
+  saldo_novo: number;
+  createdAt: any;
+}
+
+export interface RelatorioMensal {
+  id?: string;
+  uid_cliente: string;
+  mes: number;
+  ano: number;
+  investimento_total: number;
+  leads_gerados: number;
+  conversoes: number;
+  ticket_medio: number;
+  roi: number;
+  observacoes?: string;
+  arquivos?: Array<{
+    nome: string;
+    url: string;
+  }>;
+  createdAt: any;
+}
+
+export interface CampanhasTabProps {
+  clientes: Cliente[];
+  campanhas: Campanha[];
+  selectedCliente: string;
+  setSelectedCliente: (uid: string) => void;
 }

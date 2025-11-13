@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Header } from '../../components/layout/Header';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { useFirestoreCollection } from '../../hooks/useFirestore';
-import { useCreateClient } from '../../hooks/useCreateClient';
-import type { Cliente } from '../../types';
-import { formatCurrency } from '../../lib/utils';
+import { Header } from '../../../components/layout/Header';
+import { Card } from '../../../components/ui/Card';
+import { Button } from '../../../components/ui/Button';
+import { Input } from '../../../components/ui/Input';
+import { useFirestoreCollection } from '../../../hooks/useFirestore';
+import { useCreateClient } from '../../../hooks/useCreateClient';
+import type { Cliente } from '../../../types';
+import { formatCurrency } from '../../../lib/utils';
 import { Edit2, Plus } from 'lucide-react';
 
 export function Clients() {

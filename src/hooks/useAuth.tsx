@@ -1,94 +1,88 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { 
-  type User as FirebaseUser,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-} from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+// src/hooks/useAuth.ts
+import { useEffect, useState } from 'react';
 import { auth, db } from '../lib/firebase';
-import type { User } from '../types';
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut as fbSignOut, User } from 'firebase/auth';
+import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
+export type UserRole = 'admin' | 'client';
+
+export interface UserProfile {
+  id: string;
+  role: UserRole;
+  active: boolean;
+  email: string;
+  name: string;
+  avatar: string;
+  createdAt?: unknown;
+  updatedAt?: unknown;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+export const useAuth = () => {
+  const [session, setSession] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        await loadUser(firebaseUser);
+    let unsubProfile: (() => void) | null = null;
+    const unsubAuth = onAuthStateChanged(auth, async (u) => {
+      setSession(u);
+      if (unsubProfile) {
+        unsubProfile();
+        unsubProfile = null;
+      }
+      if (u?.uid) {
+        const ref = doc(db, 'users', u.uid);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          await setDoc(ref, {
+            id: u.uid,
+            email: u.email || '',
+            name: u.displayName || '',
+            avatar: u.photoURL || '',
+            role: 'client',
+            active: true,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+        } else {
+          await setDoc(ref, { updatedAt: serverTimestamp() }, { merge: true });
+        }
+        unsubProfile = onSnapshot(ref, (docSnap) => {
+          const data = docSnap.data() as UserProfile | undefined;
+          setProfile(data || null);
+          setLoading(false);
+        });
       } else {
-        setUser(null);
+        setProfile(null);
         setLoading(false);
       }
     });
-
-    return unsubscribe;
+    return () => {
+      if (unsubProfile) unsubProfile();
+      unsubAuth();
+    };
   }, []);
 
-  async function loadUser(firebaseUser: FirebaseUser) {
+  const signInWithGoogle = async () => {
     try {
-      // Verifica se é admin checando o documento em /admins
-      const adminDoc = await getDoc(doc(db, 'admins', firebaseUser.uid));
-      const isAdmin = adminDoc.exists();
-
-      if (!isAdmin) {
-        // É um cliente, busca dados em /clientes
-        const clientDoc = await getDoc(doc(db, 'clientes', firebaseUser.uid));
-        if (clientDoc.exists()) {
-          const clientData = clientDoc.data();
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email!,
-            displayName: clientData.nome,
-            isAdmin: false,
-          });
-        }
-      } else {
-        // É admin
-        setUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email!,
-          displayName: firebaseUser.displayName || 'Admin',
-          isAdmin: true,
-        });
-      }
-    } catch (error) {
-      console.error('Error loading user:', error);
-    } finally {
-      setLoading(false);
+      setError(null);
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign in failed');
     }
-  }
+  };
 
-  async function signIn(email: string, password: string) {
-    await signInWithEmailAndPassword(auth, email, password);
-  }
+  const signOut = async () => {
+    try {
+      setError(null);
+      await fbSignOut(auth);
+      setProfile(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign out failed');
+    }
+  };
 
-  async function signOut() {
-    await firebaseSignOut(auth);
-    setUser(null);
-  }
-
-  return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
+  return { session, profile, loading, error, signInWithGoogle, signOut };
+};

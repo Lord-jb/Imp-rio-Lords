@@ -1,75 +1,38 @@
+// src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './hooks/useAuth';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Login } from './pages/Login';
-import { ClientDashboard } from './pages/client/ClientDashboard';
-import { AdminDashboard } from './pages/admin/AdminDashboard';
-import { Clients } from './pages/admin/Clients';
-import { Campaigns } from './pages/admin/Campaigns';
-
-function RootRedirect() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-secondary"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <Navigate to={user.isAdmin ? "/admin" : "/dashboard"} replace />;
-}
+import { AdminDashboard } from '@/pages/admin/AdminDashboard';
+import { ClientDashboard } from '@/pages/client/ClientDashboard';
+import { AuthCallback } from '@/pages/AuthCallback';
+import PrivateRoute from '@/routes/PrivateRoute';
+import RoleRoute from '@/routes/RoleRoute';
 
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<RootRedirect />} />
-          <Route path="/login" element={<Login />} />
-          
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <ClientDashboard />
-              </ProtectedRoute>
-            }
-          />
-          
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route element={<PrivateRoute />}>
           <Route
             path="/admin"
             element={
-              <ProtectedRoute requireAdmin>
+              <RoleRoute role="admin">
                 <AdminDashboard />
-              </ProtectedRoute>
+              </RoleRoute>
             }
           />
-
           <Route
-            path="/admin/clients"
+            path="/client"
             element={
-              <ProtectedRoute requireAdmin>
-                <Clients />
-              </ProtectedRoute>
+              <RoleRoute role="client">
+                <ClientDashboard />
+              </RoleRoute>
             }
           />
-
-          <Route
-            path="/admin/campaigns"
-            element={
-              <ProtectedRoute requireAdmin>
-                <Campaigns />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </AuthProvider>
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </BrowserRouter>
   );
 }
