@@ -7,6 +7,8 @@ interface CreateClientData {
   nome: string;
   email: string;
   senha: string;
+  role: string;
+  active:boolean;
   planoNome: string;
   saldo: number;
   artesTotal: number;

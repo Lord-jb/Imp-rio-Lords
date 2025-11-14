@@ -11,7 +11,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export function Button({ 
   children, 
   variant = 'primary', 
-  size = 'md',
+  size = 'md', 
   className = '',
   ...props 
 }: ButtonProps) {

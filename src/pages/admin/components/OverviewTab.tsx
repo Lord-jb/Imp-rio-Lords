@@ -8,7 +8,6 @@ import {
   Lightbulb
 } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
 import { formatCurrency } from '../../../lib/utils';
 import type { Cliente, Campanha, SolicitacaoDesign, Lead, Agenda, Ideia } from '../../../types';
 

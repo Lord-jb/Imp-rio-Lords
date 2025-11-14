@@ -1,4 +1,4 @@
-// pages/admin/components/DesignTab.tsx
+// FILE: src/pages/admin/components/DesignTab.tsx
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import type { Cliente, SolicitacaoDesign } from '../../../types';

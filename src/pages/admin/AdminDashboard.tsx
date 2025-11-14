@@ -1,20 +1,18 @@
 // pages/admin/AdminDashboard.tsx
 import { useState } from 'react';
 import { Header } from '../../components/layout/Header';
-import { Button } from '../../components/ui/Button';
 import { useFirestoreCollection } from '../../hooks/useFirestore';
-import { Plus } from 'lucide-react';
 import { OverviewTab } from './components/OverviewTab';
 import { Clients } from './components/Clients';
 import { CampanhasTab } from './components/CampanhasTab';
 import { AgendaTab } from './components/AgendaTab';
-import { DesignTab } from './components/DesignTab';
 import { LeadsTab } from './components/LeadsTab';
 import { ArquivosTab } from './components/ArquivosTab';
 import { InsightsTab } from './components/InsightsTab';
 import { IdeiasTab } from './components/IdeiasTab';
 import { FinanceiroTab } from './components/FinanceiroTab';
 import { NovoClienteModal } from './components/NovoClienteModal';
+import { SolicitacoesArtesTab } from './components/SolicitacoesArtesTab';
 import type { 
   Cliente, 
   Campanha, 
@@ -40,7 +38,7 @@ interface UserDoc {
 }
 
 export function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'campanhas' | 'agenda' | 'design' | 'arquivos' | 'leads' | 'insights' | 'ideias' | 'financeiro'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'campanhas' | 'agenda' | 'solicitacoes' | 'arquivos' | 'leads' | 'insights' | 'ideias' | 'financeiro'>('overview');
   const [showClienteModal, setShowClienteModal] = useState(false);
 
   const { data: usersRaw } = useFirestoreCollection<UserDoc>('users');
@@ -69,32 +67,32 @@ export function AdminDashboard() {
       
       <main className="px-4 sm:px-6 lg:px-8 py-8">
 
-        <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
-          {[
-            { key: 'overview', label: 'Visão Geral' },
-            { key: 'users', label: 'Clientes' },
-            { key: 'campanhas', label: 'Campanhas' },
-            { key: 'agenda', label: 'Agenda' },
-            { key: 'design', label: 'Design' },
-            { key: 'leads', label: 'Leads' },
-            { key: 'arquivos', label: 'Arquivos' },
-            { key: 'insights', label: 'Insights' },
-            { key: 'ideias', label: 'Ideias' },
-            { key: 'financeiro', label: 'Financeiro' },
-          ].map((tab) => (
-            <button
-              key={`tab-${tab.key}`}
-              onClick={() => setActiveTab(tab.key as any)}
-              className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
-                activeTab === tab.key
-                  ? 'bg-secondary text-background'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+<div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+  {[
+    { key: 'overview', label: 'Visão Geral' },
+    { key: 'users', label: 'Usuários' },
+    { key: 'campanhas', label: 'Campanhas' },
+    { key: 'agenda', label: 'Agenda' },
+    { key: 'solicitacoes', label: 'Solicitações de Artes' }, // ALTERADO
+    { key: 'leads', label: 'Leads' },
+    { key: 'arquivos', label: 'Arquivos' },
+    { key: 'insights', label: 'Insights' },
+    { key: 'ideias', label: 'Ideias' },
+    { key: 'financeiro', label: 'Financeiro' },
+  ].map((tab) => (
+    <button
+      key={`tab-${tab.key}`}
+      onClick={() => setActiveTab(tab.key as any)}
+      className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+        activeTab === tab.key
+          ? 'bg-secondary text-background'
+          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+      }`}
+    >
+      {tab.label}
+    </button>
+  ))}
+</div>
 
         {activeTab === 'overview' && (
           <OverviewTab 
@@ -118,8 +116,11 @@ export function AdminDashboard() {
           <AgendaTab clientes={clientes} agendas={agendas} />
         )}
 
-        {activeTab === 'design' && (
-          <DesignTab clientes={clientes} solicitacoes={solicitacoes} />
+        {activeTab === 'solicitacoes' && (
+          <SolicitacoesArtesTab 
+            clientes={clientes}
+            solicitacoes={solicitacoes}
+          />
         )}
 
         {activeTab === 'leads' && (

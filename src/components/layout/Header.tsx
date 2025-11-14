@@ -1,71 +1,243 @@
 // components/layout/Header.tsx
-import { Link, useNavigate } from 'react-router-dom';
-import { LogOut, User, LayoutDashboard } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '../ui/Button';
+import { Link } from 'react-router-dom';
+import { 
+  LogOut, 
+  User, 
+  Bell,
+  ChevronDown,
+  Zap,
+  Menu,
+  X
+} from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 
 export function Header() {
   const { session, profile, signOut } = useAuth();
-  const navigate = useNavigate();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  const isAdmin = profile?.role === 'admin';
+  const dashboardPath = isAdmin ? '/admin' : '/client';
 
   return (
-    <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-40">
-      <div className="px-4 sm:px-6 lg:px-8">
+    <header className="bg-gray-900/95 backdrop-blur-xl border-b border-gray-800/50 sticky top-0 z-50 shadow-xl">
+      <div className="px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto">
         <div className="flex items-center justify-between h-16">
-          <Link to={profile?.role === 'admin' ? '/admin' : '/client'} className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center">
-              <span className="text-background font-bold text-xl">M</span>
+          {/* Logo */}
+          <Link 
+            to={dashboardPath} 
+            className="flex items-center gap-3 group"
+          >
+            <div className="relative">
+              <div className="absolute inset-0 bg-secondary/30 rounded-xl blur-md group-hover:blur-lg transition-all"></div>
+              <div className="relative w-11 h-11 bg-gradient-to-br from-secondary via-secondary to-yellow-600 rounded-xl flex items-center justify-center transform group-hover:scale-105 transition-transform shadow-lg">
+                <Zap className="text-background" size={22} strokeWidth={2.5} />
+              </div>
             </div>
-            <h1 className="text-xl font-bold">
-              Marketing <span className="text-secondary">Hub</span>
-            </h1>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight">
+                Marketing <span className="text-secondary">Hub</span>
+              </h1>
+              <p className="text-[9px] text-gray-500 uppercase tracking-widest font-semibold -mt-0.5">
+                by Lords
+              </p>
+            </div>
           </Link>
 
+          {/* Right Section */}
           <div className="flex items-center gap-3">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => navigate(profile?.role === 'admin' ? '/admin' : '/client')}
-              className="gap-2 hidden md:inline-flex"
-            >
-              <LayoutDashboard size={18} />
-              Dashboard
-            </Button>
+            {/* Notifications - Desktop */}
+            <button className="hidden md:flex relative p-2.5 hover:bg-gray-800 rounded-lg transition-colors group">
+              <Bell size={20} className="text-gray-400 group-hover:text-secondary transition-colors" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            </button>
 
-            <div className="hidden sm:flex flex-col items-end leading-tight">
-              <p className="text-sm font-semibold">{profile?.name || session?.displayName || 'Usuário'}</p>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400">{session?.email || profile?.email}</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${profile?.role === 'admin' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                  {profile?.role === 'admin' ? 'Administrador' : 'Cliente'}
+            {/* User Menu - Desktop */}
+            <div className="hidden md:block relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800/70 transition-all group"
+              >
+                {/* Avatar */}
+                <div className="relative">
+                  {profile?.avatar ? (
+                    <>
+                      <div className="absolute inset-0 bg-secondary/30 rounded-full blur-sm"></div>
+                      <img
+                        src={profile.avatar}
+                        alt="avatar"
+                        className="relative w-9 h-9 rounded-full object-cover ring-2 ring-gray-700 group-hover:ring-secondary/50 transition-all"
+                      />
+                    </>
+                  ) : (
+                    <div className="w-9 h-9 bg-gradient-to-br from-secondary/30 to-secondary/10 rounded-full flex items-center justify-center ring-2 ring-gray-700 group-hover:ring-secondary/50 transition-all">
+                      <User className="text-secondary" size={18} />
+                    </div>
+                  )}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900"></div>
+                </div>
+
+                {/* User Info */}
+                <div className="text-left">
+                  <p className="text-sm font-semibold leading-tight">
+                    {profile?.name?.split(' ')[0] || 'Usuário'}
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                      isAdmin 
+                        ? 'bg-purple-500/20 text-purple-400' 
+                        : 'bg-blue-500/20 text-blue-400'
+                    }`}>
+                      {isAdmin ? 'Admin' : 'Cliente'}
+                    </span>
+                  </div>
+                </div>
+
+                <ChevronDown 
+                  size={16} 
+                  className={`text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} 
+                />
+              </button>
+
+              {/* Dropdown Menu */}
+              {showUserMenu && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setShowUserMenu(false)}
+                  ></div>
+                  <div className="absolute right-0 top-14 w-72 bg-gray-900 border border-gray-800 rounded-xl shadow-2xl py-2 z-50 animate-fadeIn">
+                    {/* User Info Section */}
+                    <div className="px-4 py-3 border-b border-gray-800">
+                      <p className="font-semibold text-sm mb-0.5">
+                        {profile?.name || session?.displayName || 'Usuário'}
+                      </p>
+                      <p className="text-xs text-gray-400 mb-2">
+                        {session?.email}
+                      </p>
+                      <span className={`inline-block text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider ${
+                        isAdmin 
+                          ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
+                          : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                      }`}>
+                        {isAdmin ? 'Administrador' : 'Cliente'}
+                      </span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="py-2">
+                      <button
+                        onClick={() => {
+                          signOut();
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                      >
+                        <LogOut size={18} />
+                        <span className="font-medium">Sair da conta</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="md:hidden p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            >
+              {showMobileMenu ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {showMobileMenu && (
+          <div className="md:hidden border-t border-gray-800 py-4 animate-slideDown">
+            {/* User Info Mobile */}
+            <div className="flex items-center gap-3 px-2 py-3 mb-4 bg-gray-800/50 rounded-lg">
+              {profile?.avatar ? (
+                <img
+                  src={profile.avatar}
+                  alt="avatar"
+                  className="w-12 h-12 rounded-full object-cover ring-2 ring-secondary/30"
+                />
+              ) : (
+                <div className="w-12 h-12 bg-gradient-to-br from-secondary/30 to-secondary/10 rounded-full flex items-center justify-center ring-2 ring-secondary/30">
+                  <User className="text-secondary" size={22} />
+                </div>
+              )}
+              <div className="flex-1">
+                <p className="font-semibold text-sm">
+                  {profile?.name || 'Usuário'}
+                </p>
+                <p className="text-xs text-gray-400 mb-1">
+                  {session?.email}
+                </p>
+                <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                  isAdmin 
+                    ? 'bg-purple-500/20 text-purple-400' 
+                    : 'bg-blue-500/20 text-blue-400'
+                }`}>
+                  {isAdmin ? 'Admin' : 'Cliente'}
                 </span>
               </div>
             </div>
 
-            {profile?.avatar ? (
-              <img
-                src={profile.avatar}
-                alt="avatar"
-                className="w-8 h-8 rounded-full object-cover ring-2 ring-secondary/30"
-              />
-            ) : (
-              <div className="w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center">
-                <User className="text-secondary" size={18} />
+            {/* Notifications Mobile */}
+            <button className="w-full flex items-center justify-between px-2 py-3 rounded-lg hover:bg-gray-800 transition-colors mb-2">
+              <div className="flex items-center gap-3">
+                <Bell size={20} className="text-gray-400" />
+                <span className="text-sm font-medium">Notificações</span>
               </div>
-            )}
+              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            </button>
 
-            <Button
-              size="sm"
-              variant="ghost"
+            {/* Logout Mobile */}
+            <button
               onClick={signOut}
-              className="gap-2"
+              className="w-full flex items-center gap-3 px-2 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
             >
-              <LogOut size={18} />
-              <span className="hidden sm:inline">Sair</span>
-            </Button>
+              <LogOut size={20} />
+              <span className="text-sm font-medium">Sair da conta</span>
+            </button>
           </div>
-        </div>
+        )}
       </div>
+
+      <style>{`
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.96);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .animate-slideDown {
+          animation: slideDown 0.2s ease-out;
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.15s ease-out;
+        }
+      `}</style>
     </header>
   );
 }

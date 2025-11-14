@@ -1,9 +1,10 @@
 // pages/client/components/IdeiaModal.tsx
 import { useState } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../../lib/firebase';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
+import { db } from '../../../lib/firebase';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { X, Lightbulb, Loader2 } from 'lucide-react';
 
 interface IdeiaModalProps {
   clienteUid: string;
@@ -14,7 +15,6 @@ export function IdeiaModal({ clienteUid, onClose }: IdeiaModalProps) {
   const [formData, setFormData] = useState({
     titulo: '',
     descricao: '',
-    categoria: '',
   });
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
@@ -29,70 +29,83 @@ export function IdeiaModal({ clienteUid, onClose }: IdeiaModalProps) {
         uid_cliente: clienteUid,
         titulo: formData.titulo,
         descricao: formData.descricao,
-        categoria: formData.categoria,
         status: 'novo',
-        prioridade: 'media',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        createdAt: Timestamp.now(),
       });
 
       setFeedback('Ideia enviada com sucesso!');
-      setTimeout(() => onClose(), 1500);
-    } catch (error) {
-      setFeedback('Erro ao enviar ideia.');
+      
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (error: any) {
+      setFeedback(error.message || 'Erro ao enviar ideia');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg p-6 max-w-2xl w-full">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Enviar Ideia</h2>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+      <div className="bg-gray-900 border border-border rounded-xl shadow-2xl p-6 max-w-2xl w-full">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="bg-purple-500/20 rounded-lg p-2">
+              <Lightbulb className="text-purple-400" size={24} />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">Enviar Ideia</h2>
+              <p className="text-sm text-gray-400">Compartilhe suas sugestões</p>
+            </div>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-2xl"
+            className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-800 rounded-lg"
           >
-            ×
+            <X size={24} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <Input
             label="Título da Ideia"
             value={formData.titulo}
             onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+            placeholder="Ex: Campanha para Black Friday"
             required
-            placeholder="Ex: Nova campanha para Black Friday"
           />
 
           <div>
-            <label className="block text-sm font-semibold mb-2">Descrição</label>
+            <label className="block text-sm font-medium mb-2">Descrição Detalhada</label>
             <textarea
               value={formData.descricao}
               onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white h-32"
+              className="w-full px-4 py-3 bg-gray-800 border border-border rounded-lg text-white min-h-[150px] focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+              placeholder="Descreva sua ideia em detalhes: objetivos, público-alvo, estratégia, etc."
               required
-              placeholder="Descreva sua ideia, sugestão ou necessidade..."
             />
           </div>
 
-          <Input
-            label="Categoria (opcional)"
-            value={formData.categoria}
-            onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
-            placeholder="Ex: Marketing, Design, Produto"
-          />
-
-          <div className="flex gap-4 mt-6">
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Enviando...' : 'Enviar Ideia'}
+          <div className="flex gap-4 pt-4">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="flex-1"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin mr-2" size={18} />
+                  Enviando...
+                </>
+              ) : (
+                'Enviar Ideia'
+              )}
             </Button>
             <Button
               type="button"
               variant="ghost"
               onClick={onClose}
+              disabled={loading}
               className="flex-1"
             >
               Cancelar
@@ -100,9 +113,13 @@ export function IdeiaModal({ clienteUid, onClose }: IdeiaModalProps) {
           </div>
 
           {feedback && (
-            <p className={`text-center font-semibold ${feedback.includes('sucesso') ? 'text-green-500' : 'text-red-500'}`}>
+            <div className={`p-4 rounded-lg text-center font-semibold animate-fadeIn ${
+              feedback.includes('sucesso') 
+                ? 'bg-green-500/20 text-green-500 border border-green-500/50' 
+                : 'bg-red-500/20 text-red-500 border border-red-500/50'
+            }`}>
               {feedback}
-            </p>
+            </div>
           )}
         </form>
       </div>

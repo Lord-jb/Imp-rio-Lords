@@ -1,8 +1,27 @@
+// FILE: src/types/index.ts
 export interface User {
   uid: string;
   email: string;
   displayName: string;
   isAdmin: boolean;
+}
+
+
+export interface UserClient {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
+  avatar?: string;
+  planoNome?: string;
+  saldo?: number;
+  artesTotal?: number;
+  statusSite?: string;
+  permissoes?: {
+    podeSolicitarDesign: boolean;
+    recebeLeads: boolean;
+  };
 }
 
 export interface Cliente {
@@ -59,7 +78,7 @@ export interface SolicitacaoDesign {
   referencia_url?: string;
   prazo?: string;
   prioridade: 'baixa' | 'media' | 'alta' | 'urgente';
-  status: 'novo' | 'em_producao' | 'revisao' | 'entregue' | 'cancelado';
+  status: 'novo' | 'em_producao' | 'revisao' | 'entregue' | 'cancelado'| 'pendente';
   responsavel?: string;
   entregas: Array<{
     nome: string;
@@ -76,7 +95,7 @@ export interface SolicitacaoDesign {
   createdAt: any;
   updatedAt: any;
 }
-
+ 
 export interface Lead {
   id?: string;
   uid_cliente: string;
@@ -150,7 +169,7 @@ export interface Ideia {
   titulo: string;
   descricao: string;
   categoria?: string;
-  status: 'novo' | 'em_analise' | 'aprovado' | 'implementado' | 'arquivado';
+  status: 'novo' | 'em_analise' | 'aprovado' | 'implementado' | 'arquivado' | 'rejeitado';
   prioridade?: 'baixa' | 'media' | 'alta';
   resposta_admin?: string;
   createdAt: any;
@@ -186,11 +205,4 @@ export interface RelatorioMensal {
     url: string;
   }>;
   createdAt: any;
-}
-
-export interface CampanhasTabProps {
-  clientes: Cliente[];
-  campanhas: Campanha[];
-  selectedCliente: string;
-  setSelectedCliente: (uid: string) => void;
 }

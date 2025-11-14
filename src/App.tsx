@@ -1,11 +1,10 @@
-// src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
-import { AdminDashboard } from '@/pages/admin/AdminDashboard';
-import { ClientDashboard } from '@/pages/client/ClientDashboard';
-import { AuthCallback } from '@/pages/AuthCallback';
-import PrivateRoute from '@/routes/PrivateRoute';
-import RoleRoute from '@/routes/RoleRoute';
+import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { ClientDashboard } from './pages/client/ClientDashboard';
+import { AuthCallback } from './pages/AuthCallback';
+import PrivateRoute from './routes/PrivateRoute';
+import RoleRoute from './routes/RoleRoute';
 
 function App() {
   return (
