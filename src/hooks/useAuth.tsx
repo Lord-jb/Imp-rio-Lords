@@ -1,8 +1,21 @@
-// src/hooks/useAuth.ts
 import { useEffect, useState } from 'react';
 import { auth, db } from '../lib/firebase';
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut as fbSignOut, User } from 'firebase/auth';
-import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
+import {
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as fbSignOut,
+  User
+} from 'firebase/auth';
+import {
+  doc,
+  getDoc,
+  onSnapshot,
+  serverTimestamp,
+  setDoc
+} from 'firebase/firestore';
 
 export type UserRole = 'admin' | 'client';
 
@@ -23,66 +36,101 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Criação/atualização automática do perfil
+  const ensureUserProfile = async (u: User) => {
+    const ref = doc(db, 'users', u.uid);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) {
+      await setDoc(ref, {
+        id: u.uid,
+        email: u.email || '',
+        name: u.displayName || '',
+        avatar: u.photoURL || '',
+        role: 'client',
+        active: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    } else {
+      await setDoc(ref, { updatedAt: serverTimestamp() }, { merge: true });
+    }
+
+    return onSnapshot(ref, (docSnap) => {
+      setProfile(docSnap.data() as UserProfile);
+      setLoading(false);
+    });
+  };
+
+  // Observa login/logout
   useEffect(() => {
     let unsubProfile: (() => void) | null = null;
-    const unsubAuth = onAuthStateChanged(auth, async (u) => {
+
+    const unsub = onAuthStateChanged(auth, async (u) => {
       setSession(u);
-      if (unsubProfile) {
-        unsubProfile();
-        unsubProfile = null;
-      }
-      if (u?.uid) {
-        const ref = doc(db, 'users', u.uid);
-        const snap = await getDoc(ref);
-        if (!snap.exists()) {
-          await setDoc(ref, {
-            id: u.uid,
-            email: u.email || '',
-            name: u.displayName || '',
-            avatar: u.photoURL || '',
-            role: 'client',
-            active: true,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
-        } else {
-          await setDoc(ref, { updatedAt: serverTimestamp() }, { merge: true });
-        }
-        unsubProfile = onSnapshot(ref, (docSnap) => {
-          const data = docSnap.data() as UserProfile | undefined;
-          setProfile(data || null);
-          setLoading(false);
-        });
+      if (unsubProfile) unsubProfile();
+
+      if (u) {
+        setLoading(true);
+        unsubProfile = await ensureUserProfile(u);
       } else {
         setProfile(null);
         setLoading(false);
       }
     });
+
     return () => {
+      unsub();
       if (unsubProfile) unsubProfile();
-      unsubAuth();
     };
   }, []);
 
+  // Login com Google
   const signInWithGoogle = async () => {
+    setError(null);
     try {
-      setError(null);
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed');
+      setError(err instanceof Error ? err.message : 'Erro no Google Login');
+    }
+  };
+
+  // Login com email + senha
+  const signInWithEmailPassword = async (email: string, password: string) => {
+    setError(null);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao entrar com e-mail');
+    }
+  };
+
+  // Registrar nova conta por email
+  const registerWithEmailPassword = async (email: string, password: string) => {
+    setError(null);
+    try {
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      // cria perfil
+      await ensureUserProfile(user);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao registrar');
     }
   };
 
   const signOut = async () => {
-    try {
-      setError(null);
-      await fbSignOut(auth);
-      setProfile(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign out failed');
-    }
+    await fbSignOut(auth);
+    setProfile(null);
   };
 
-  return { session, profile, loading, error, signInWithGoogle, signOut };
+  return {
+    session,
+    profile,
+    loading,
+    error,
+    signInWithGoogle,
+    signInWithEmailPassword,
+    registerWithEmailPassword,
+    signOut
+  };
 };
