@@ -151,14 +151,49 @@ function ArquivoModal({
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [uploadError, setUploadError] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+
+  // Função para salvar no banco de dados
+  async function saveToDatabase() {
+    if (!formData.uid_cliente || !formData.downloadURL) {
+      setFeedback('Selecione um cliente e faça upload do arquivo primeiro');
+      return;
+    }
+
+    setLoading(true);
+    setFeedback('Salvando arquivo no banco de dados...');
+
+    try {
+      await addDoc(collection(db, 'arquivos'), {
+        uid_cliente: formData.uid_cliente,
+        titulo: formData.titulo,
+        categoria: formData.categoria,
+        downloadURL: formData.downloadURL,
+        descricao: formData.descricao,
+        storagePath: formData.storagePath,
+        createdAt: Timestamp.now(),
+      });
+      setFeedback('✅ Arquivo compartilhado com o cliente com sucesso!');
+
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (error: any) {
+      console.error('Erro ao salvar:', error);
+      setFeedback(`❌ Erro ao salvar: ${error.message || 'Erro desconhecido'}`);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    setFeedback('');
 
-    try {
-      if (arquivo?.id) {
+    // Se está editando, usa a lógica antiga
+    if (arquivo?.id) {
+      setLoading(true);
+      setFeedback('');
+      try {
         await updateDoc(doc(db, 'arquivos', arquivo.id), {
           uid_cliente: formData.uid_cliente,
           titulo: formData.titulo,
@@ -168,26 +203,17 @@ function ArquivoModal({
           storagePath: formData.storagePath,
         });
         setFeedback('Arquivo atualizado com sucesso!');
-      } else {
-        await addDoc(collection(db, 'arquivos'), {
-          uid_cliente: formData.uid_cliente,
-          titulo: formData.titulo,
-          categoria: formData.categoria,
-          downloadURL: formData.downloadURL,
-          descricao: formData.descricao,
-          storagePath: formData.storagePath,
-          createdAt: Timestamp.now(),
-        });
-        setFeedback('Arquivo criado com sucesso!');
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      } catch (error: any) {
+        setFeedback(error.message || 'Erro ao salvar arquivo');
+      } finally {
+        setLoading(false);
       }
-
-      setTimeout(() => {
-        onClose();
-      }, 1500);
-    } catch (error: any) {
-      setFeedback(error.message || 'Erro ao salvar arquivo');
-    } finally {
-      setLoading(false);
+    } else {
+      // Se está criando novo, usa a nova função
+      await saveToDatabase();
     }
   }
 
@@ -244,21 +270,34 @@ function ArquivoModal({
           </div>
 
           {!arquivo && (
-            <FileUpload
-              label="Arquivo"
-              folder={`arquivos/${formData.uid_cliente || 'temp'}`}
-              onUploadComplete={(downloadURL, storagePath, fileName) => {
-                setFormData({
-                  ...formData,
-                  downloadURL,
-                  storagePath,
-                  titulo: formData.titulo || fileName,
-                });
-                setUploadError('');
-              }}
-              onError={(error) => setUploadError(error)}
-              disabled={!formData.uid_cliente}
-            />
+            <div>
+              <FileUpload
+                label="Arquivo"
+                folder={`arquivos/${formData.uid_cliente || 'temp'}`}
+                onUploadComplete={(downloadURL, storagePath, fileName) => {
+                  setFormData({
+                    ...formData,
+                    downloadURL,
+                    storagePath,
+                    titulo: formData.titulo || fileName,
+                  });
+                  setUploadSuccess(true);
+                  setUploadError('');
+                }}
+                onError={(error) => {
+                  setUploadError(error);
+                  setUploadSuccess(false);
+                }}
+                disabled={!formData.uid_cliente}
+              />
+              {uploadSuccess && formData.downloadURL && (
+                <div className="mt-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                  <p className="text-green-500 text-sm font-medium">
+                    ✅ Upload concluído! Agora clique em "Compartilhar com Cliente" abaixo.
+                  </p>
+                </div>
+              )}
+            </div>
           )}
 
           {arquivo && (
@@ -296,9 +335,24 @@ function ArquivoModal({
           )}
 
           {!formData.uid_cliente && !arquivo && (
-            <p className="text-yellow-500 text-sm text-center">
-              Selecione um cliente antes de fazer upload
-            </p>
+            <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+              <p className="text-yellow-500 text-sm font-medium">
+                ⚠️ Selecione um cliente antes de fazer upload
+              </p>
+            </div>
+          )}
+
+          {!arquivo && formData.uid_cliente && !formData.downloadURL && (
+            <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+              <p className="text-blue-400 text-sm">
+                📋 <strong>Passo a passo:</strong>
+              </p>
+              <ol className="text-blue-400 text-sm mt-2 space-y-1 list-decimal list-inside">
+                <li>Selecione o arquivo clicando na área acima</li>
+                <li>Clique em "Fazer Upload" para enviar ao servidor</li>
+                <li>Após o upload, clique em "Compartilhar com Cliente"</li>
+              </ol>
+            </div>
           )}
 
           <div className="flex gap-4 mt-6">
@@ -307,7 +361,7 @@ function ArquivoModal({
               disabled={loading || (!arquivo && !formData.downloadURL)}
               className="flex-1"
             >
-              {loading ? 'Salvando...' : arquivo ? 'Salvar Alterações' : 'Criar Arquivo'}
+              {loading ? 'Salvando...' : arquivo ? 'Salvar Alterações' : '📤 Compartilhar com Cliente'}
             </Button>
             <Button type="button" variant="ghost" onClick={onClose} className="flex-1">
               Cancelar
@@ -315,11 +369,13 @@ function ArquivoModal({
           </div>
 
           {feedback && (
-            <p className={`text-center font-semibold ${
-              feedback.includes('sucesso') ? 'text-green-500' : 'text-red-500'
+            <div className={`mt-4 p-3 rounded-lg text-center font-semibold ${
+              feedback.includes('✅') || feedback.includes('sucesso')
+                ? 'bg-green-500/10 border border-green-500/30 text-green-500'
+                : 'bg-red-500/10 border border-red-500/30 text-red-500'
             }`}>
               {feedback}
-            </p>
+            </div>
           )}
         </form>
       </div>
