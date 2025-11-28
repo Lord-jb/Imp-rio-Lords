@@ -1,4 +1,3 @@
-
 // components/ui/Button.tsx
 import type { ReactNode, ButtonHTMLAttributes } from 'react';
 
@@ -8,27 +7,27 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'sm' | 'md' | 'lg';
 }
 
-export function Button({ 
-  children, 
-  variant = 'primary', 
-  size = 'md', 
+export function Button({
+  children,
+  variant = 'primary',
+  size = 'md',
   className = '',
-  ...props 
+  ...props
 }: ButtonProps) {
-  const baseClasses = 'font-semibold rounded-lg transition-colors flex items-center justify-center';
-  
+  const baseClasses = 'font-medium rounded-lg transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed';
+
   const variantClasses = {
-    primary: 'bg-secondary text-background hover:bg-yellow-500',
-    secondary: 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-700',
-    ghost: 'bg-transparent text-gray-400 hover:text-white hover:bg-gray-800'
+    primary: 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 shadow-sm hover:shadow',
+    secondary: 'bg-secondary-600 text-white hover:bg-secondary-700 active:bg-secondary-800 shadow-sm hover:shadow',
+    ghost: 'bg-transparent text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
   };
-  
+
   const sizeClasses = {
     sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2.5',
-    lg: 'px-6 py-3 text-lg'
+    md: 'px-4 py-2.5 text-sm',
+    lg: 'px-6 py-3 text-base'
   };
-  
+
   return (
     <button
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
