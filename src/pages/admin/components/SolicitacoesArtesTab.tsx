@@ -1,13 +1,14 @@
 // pages/admin/components/SolicitacoesArtesTab.tsx
 import { useState } from 'react';
-import { Trash2, Upload, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { Trash2, Upload, CheckCircle2, Clock, AlertCircle, FileUp } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { Select } from '../../../components/ui/Select';
+import { FileUpload } from '../../../components/ui/FileUpload';
 import type { Cliente, SolicitacaoDesign } from '../../../types';
 import { formatDate } from '../../../lib/utils';
 import { db } from '../../../lib/firebase';
-import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, arrayUnion } from 'firebase/firestore';
 
 interface SolicitacoesArtesTabProps {
   clientes: Cliente[];
@@ -17,6 +18,7 @@ interface SolicitacoesArtesTabProps {
 export function SolicitacoesArtesTab({ clientes, solicitacoes }: SolicitacoesArtesTabProps) {
   const [selectedCliente, setSelectedCliente] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [uploadingSol, setUploadingSol] = useState<SolicitacaoDesign | null>(null);
 
   const solicitacoesFiltradas = solicitacoes.filter(sol => {
     const clienteMatch = selectedCliente ? sol.uid_cliente === selectedCliente : true;
@@ -184,6 +186,26 @@ export function SolicitacoesArtesTab({ clientes, solicitacoes }: SolicitacoesArt
                 </p>
               )}
 
+              {/* Links de Entrega */}
+              {sol.links_entrega && sol.links_entrega.length > 0 && (
+                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-3">
+                  <p className="text-xs text-green-400 mb-2 font-semibold">Arquivos Entregues:</p>
+                  <div className="space-y-1">
+                    {sol.links_entrega.map((link, idx) => (
+                      <a
+                        key={idx}
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-secondary hover:underline block truncate"
+                      >
+                        📎 Arquivo {idx + 1}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Ações rápidas de status */}
               <div className="flex gap-2 mb-3">
                 {status === 'pendente' && (
@@ -195,9 +217,18 @@ export function SolicitacoesArtesTab({ clientes, solicitacoes }: SolicitacoesArt
                     Iniciar Produção
                   </Button>
                 )}
-                
+
                 {status === 'em_producao' && (
                   <>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setUploadingSol(sol)}
+                      className="flex-1"
+                    >
+                      <FileUp size={16} className="mr-1" />
+                      Upload Entrega
+                    </Button>
                     <Button
                       size="sm"
                       variant="secondary"
@@ -206,13 +237,6 @@ export function SolicitacoesArtesTab({ clientes, solicitacoes }: SolicitacoesArt
                     >
                       Enviar p/ Revisão
                     </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => sol.id && handleUpdateStatus(sol.id, 'entregue')}
-                      className="flex-1"
-                    >
-                      Entregar
-                    </Button>
                   </>
                 )}
 
@@ -220,11 +244,12 @@ export function SolicitacoesArtesTab({ clientes, solicitacoes }: SolicitacoesArt
                   <>
                     <Button
                       size="sm"
-                      variant="secondary"
-                      onClick={() => sol.id && handleUpdateStatus(sol.id, 'em_producao')}
+                      variant="ghost"
+                      onClick={() => setUploadingSol(sol)}
                       className="flex-1"
                     >
-                      Voltar p/ Produção
+                      <FileUp size={16} className="mr-1" />
+                      Upload Entrega
                     </Button>
                     <Button
                       size="sm"
@@ -257,12 +282,95 @@ export function SolicitacoesArtesTab({ clientes, solicitacoes }: SolicitacoesArt
           <Upload className="mx-auto text-gray-600 mb-4" size={48} />
           <p className="text-gray-400 mb-2">Nenhuma solicitação encontrada</p>
           <p className="text-sm text-gray-500">
-            {selectedCliente || selectedStatus 
-              ? 'Tente ajustar os filtros' 
+            {selectedCliente || selectedStatus
+              ? 'Tente ajustar os filtros'
               : 'Aguarde as solicitações dos clientes'}
           </p>
         </Card>
       )}
+
+      {/* Upload Modal */}
+      {uploadingSol && (
+        <UploadEntregaModal
+          solicitacao={uploadingSol}
+          onClose={() => setUploadingSol(null)}
+        />
+      )}
     </>
+  );
+}
+
+// Modal para Upload de Entrega
+function UploadEntregaModal({
+  solicitacao,
+  onClose,
+}: {
+  solicitacao: SolicitacaoDesign;
+  onClose: () => void;
+}) {
+  const [uploadError, setUploadError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function handleUploadComplete(downloadURL: string, storagePath: string, fileName: string) {
+    if (!solicitacao.id) return;
+
+    setSaving(true);
+    try {
+      await updateDoc(doc(db, 'solicitacoes_design', solicitacao.id), {
+        links_entrega: arrayUnion(downloadURL),
+      });
+
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (error: any) {
+      setUploadError(error.message || 'Erro ao salvar entrega');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-border rounded-lg p-6 max-w-2xl w-full">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Upload de Entrega</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white text-2xl"
+            disabled={saving}
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="mb-4">
+          <p className="text-sm text-gray-400">
+            Solicitação: <span className="text-white font-semibold">{solicitacao.titulo}</span>
+          </p>
+          <p className="text-sm text-gray-400">
+            Tipo: <span className="text-white">{solicitacao.tipo}</span>
+          </p>
+        </div>
+
+        <FileUpload
+          label="Arquivo de Entrega"
+          folder={`entregas/${solicitacao.uid_cliente}/${solicitacao.id}`}
+          onUploadComplete={handleUploadComplete}
+          onError={(error) => setUploadError(error)}
+          accept="image/*,video/*,.pdf,.ai,.psd,.fig"
+        />
+
+        {uploadError && (
+          <p className="text-red-500 text-sm text-center mt-4">{uploadError}</p>
+        )}
+
+        {saving && (
+          <p className="text-green-500 text-sm text-center mt-4">
+            Salvando entrega...
+          </p>
+        )}
+      </div>
+    </div>
   );
 }

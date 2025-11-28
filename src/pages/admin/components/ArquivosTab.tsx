@@ -4,6 +4,7 @@ import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
+import { FileUpload } from '../../../components/ui/FileUpload';
 import type { Cliente, ArquivoCompartilhado } from '../../../types';
 import { formatDate } from '../../../lib/utils';
 import { db } from '../../../lib/firebase';
@@ -149,6 +150,7 @@ function ArquivoModal({
   });
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [uploadError, setUploadError] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -241,22 +243,44 @@ function ArquivoModal({
             </Select>
           </div>
 
-          <Input
-            label="URL do Arquivo"
-            type="url"
-            value={formData.downloadURL}
-            onChange={(e) => setFormData({ ...formData, downloadURL: e.target.value })}
-            required
-            placeholder="https://drive.google.com/..."
-          />
+          {!arquivo && (
+            <FileUpload
+              label="Arquivo"
+              folder={`arquivos/${formData.uid_cliente || 'temp'}`}
+              onUploadComplete={(downloadURL, storagePath, fileName) => {
+                setFormData({
+                  ...formData,
+                  downloadURL,
+                  storagePath,
+                  titulo: formData.titulo || fileName,
+                });
+                setUploadError('');
+              }}
+              onError={(error) => setUploadError(error)}
+              disabled={!formData.uid_cliente}
+            />
+          )}
 
-          <Input
-            label="Caminho de Armazenamento"
-            value={formData.storagePath}
-            onChange={(e) => setFormData({ ...formData, storagePath: e.target.value })}
-            required
-            placeholder="clientes/uid/arquivo.pdf"
-          />
+          {arquivo && (
+            <>
+              <Input
+                label="URL do Arquivo"
+                type="url"
+                value={formData.downloadURL}
+                onChange={(e) => setFormData({ ...formData, downloadURL: e.target.value })}
+                required
+                disabled
+              />
+
+              <Input
+                label="Caminho de Armazenamento"
+                value={formData.storagePath}
+                onChange={(e) => setFormData({ ...formData, storagePath: e.target.value })}
+                required
+                disabled
+              />
+            </>
+          )}
 
           <div>
             <label className="block text-sm font-medium mb-2">Descrição (opcional)</label>
@@ -267,8 +291,22 @@ function ArquivoModal({
             />
           </div>
 
+          {uploadError && (
+            <p className="text-red-500 text-sm text-center">{uploadError}</p>
+          )}
+
+          {!formData.uid_cliente && !arquivo && (
+            <p className="text-yellow-500 text-sm text-center">
+              Selecione um cliente antes de fazer upload
+            </p>
+          )}
+
           <div className="flex gap-4 mt-6">
-            <Button type="submit" disabled={loading} className="flex-1">
+            <Button
+              type="submit"
+              disabled={loading || (!arquivo && !formData.downloadURL)}
+              className="flex-1"
+            >
               {loading ? 'Salvando...' : arquivo ? 'Salvar Alterações' : 'Criar Arquivo'}
             </Button>
             <Button type="button" variant="ghost" onClick={onClose} className="flex-1">
