@@ -32,6 +32,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { SolicitacaoArteModal } from './components/SolicitacaoArteModal';
 import { IdeiaModal } from './components/IdeiaModal';
+import { LeadsListClient } from './components/LeadsListClient';
 import type { 
   Cliente, 
   Campanha, 
@@ -584,76 +585,15 @@ export function ClientDashboard() {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold">Meus Leads</h3>
-                    <p className="text-sm text-gray-400">Oportunidades de negócio</p>
+                    <p className="text-sm text-gray-400">Gerencie suas oportunidades de negócio</p>
                   </div>
                 </div>
                 <span className="bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-sm font-bold">
-                  {leadsNovos} novos
+                  {leads.length} total
                 </span>
               </div>
-              
-              {leads.length === 0 ? (
-                <div className="text-center py-12 bg-gray-800/30 rounded-xl border border-dashed border-gray-700">
-                  <Users className="mx-auto text-gray-600 mb-4" size={48} />
-                  <p className="text-gray-400 mb-2">Nenhum lead ainda</p>
-                  <p className="text-sm text-gray-500">Aguarde os primeiros contatos</p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                  {leads.map((lead) => (
-                    <div
-                      key={lead.id}
-                      className="border border-border rounded-lg p-4 hover:border-green-500/50 hover:bg-gray-800/50 transition-all duration-300group cursor-pointer"
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-lg mb-2 group-hover:text-green-400 transition-colors">
-                            {lead.nome}
-                          </h4>
-                          <div className="space-y-1 text-sm text-gray-400">
-                            <p className="flex items-center gap-2">
-                              <span>📧</span>
-                              <a href={`mailto:${lead.email}`} className="hover:text-secondary transition-colors">
-                                {lead.email}
-                              </a>
-                            </p>
-                            <p className="flex items-center gap-2">
-                              <span>📱</span>
-                              <a href={`tel:${lead.telefone}`} className="hover:text-secondary transition-colors">
-                                {lead.telefone}
-                              </a>
-                            </p>
-                            {lead.cidade && (
-                              <p className="flex items-center gap-2">
-                                <span>📍</span>
-                                {lead.cidade}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold flex-shrink-0 ${
-                          lead.status === 'ganho' ? 'bg-green-500/20 text-green-400' :
-                          lead.status === 'em_negociacao' ? 'bg-blue-500/20 text-blue-400' :
-                          lead.status === 'perdido' ? 'bg-red-500/20 text-red-400' :
-                          lead.status === 'contatado' ? 'bg-yellow-500/20 text-yellow-400' :
-                          'bg-gray-500/20 text-gray-400'
-                        }`}>
-                          {lead.status.replace('_', ' ')}
-                        </span>
-                      </div>
 
-                      {lead.valor_potencial && (
-                        <div className="mt-3 pt-3 border-t border-border">
-                          <p className="text-xs text-gray-500 mb-1">Valor Potencial</p>
-                          <p className="text-lg font-bold text-green-400">
-                            {formatCurrency(lead.valor_potencial)}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <LeadsListClient leads={leads} />
             </Card>
           )}
         </div>

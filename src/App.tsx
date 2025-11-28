@@ -15,10 +15,12 @@ import { ClientDashboard } from './pages/client/ClientDashboard';
 import { AuthCallback } from './pages/AuthCallback';
 import PrivateRoute from './routes/PrivateRoute';
 import RoleRoute from './routes/RoleRoute';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 
 function App() {
   return (
     <BrowserRouter>
+      <PWAInstallPrompt />
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
