@@ -1,5 +1,5 @@
 // pages/client/ClientDashboard.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Wallet, 
   Globe, 
@@ -23,7 +23,8 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import { where } from 'firebase/firestore';
+import { where, doc as firestoreDoc, updateDoc as firestoreUpdateDoc, Timestamp } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useFirestoreCollection } from '../../hooks/useFirestore';
 import { Header } from '../../components/layout/Header';
@@ -100,6 +101,11 @@ export function ClientDashboard() {
     where('ativo', '==', true),
   ]);
 
+  // Buscar ideias do cliente
+  const { data: minhasIdeias } = useFirestoreCollection<any>('ideias', [
+    where('uid_cliente', '==', uid),
+  ]);
+
   const campanhasAtivas = campanhas.filter(c => c.status === 'Ativa');
   const solicitacoesPendentes = solicitacoes.filter(s => s.status !== 'entregue' && s.status !== 'cancelado');
   const leadsNovos = leads.filter(l => l.status === 'novo').length;
@@ -109,9 +115,34 @@ export function ClientDashboard() {
   const totalCliques = campanhasAtivas.reduce((sum, c) => sum + (c.metricas?.cliques || 0), 0);
   const totalLeads = campanhasAtivas.reduce((sum, c) => sum + (c.metricas?.leads || 0), 0);
   const totalInvestimento = campanhasAtivas.reduce((sum, c) => sum + c.investimento, 0);
-  const roasMedia = campanhasAtivas.length > 0 
+  const roasMedia = campanhasAtivas.length > 0
     ? (campanhasAtivas.reduce((sum, c) => sum + (c.metricas?.roas || 0), 0) / campanhasAtivas.length).toFixed(1)
     : 0;
+
+  // Verificar e resetar contador de artes mensalmente
+  useEffect(() => {
+    async function checkAndResetArtes() {
+      if (!userData) return;
+
+      const agora = new Date();
+      const ultimoReset = userData.ultimoResetArtes?.toDate?.() || null;
+
+      // Se não tem ultimoReset ou passou mais de 1 mês (30 dias)
+      if (!ultimoReset || (agora.getTime() - ultimoReset.getTime()) > (30 * 24 * 60 * 60 * 1000)) {
+        try {
+          const userRef = firestoreDoc(db, 'users', uid);
+          await firestoreUpdateDoc(userRef, {
+            artesUsadas: 0,
+            ultimoResetArtes: Timestamp.now(),
+          });
+        } catch (error) {
+          console.error('Erro ao resetar contador de artes:', error);
+        }
+      }
+    }
+
+    checkAndResetArtes();
+  }, [userData, uid]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-gray-900">
@@ -762,6 +793,65 @@ export function ClientDashboard() {
                   </div>
                 ))}
               </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Minhas Ideias */}
+        {minhasIdeias && minhasIdeias.length > 0 && (
+          <Card className="mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-purple-500/20 rounded-lg p-2">
+                  <Lightbulb className="text-purple-500" size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Minhas Ideias</h3>
+                  <p className="text-sm text-gray-400">Acompanhe o processo das suas sugestões</p>
+                </div>
+              </div>
+              <span className="bg-purple-500/20 text-purple-400 px-4 py-2 rounded-full text-sm font-bold">
+                {minhasIdeias.length} enviadas
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {minhasIdeias.map((ideia: any) => (
+                <div
+                  key={ideia.id}
+                  className="border border-border rounded-xl p-5 hover:border-purple-500/50 hover:bg-gray-800/50 transition-all duration-300"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <h4 className="font-semibold text-lg">{ideia.titulo}</h4>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      ideia.status === 'implementado' ? 'bg-green-500/20 text-green-400' :
+                      ideia.status === 'aprovado' ? 'bg-blue-500/20 text-blue-400' :
+                      ideia.status === 'em_analise' ? 'bg-yellow-500/20 text-yellow-400' :
+                      ideia.status === 'rejeitado' ? 'bg-red-500/20 text-red-400' :
+                      ideia.status === 'arquivado' ? 'bg-gray-500/20 text-gray-400' :
+                      'bg-purple-500/20 text-purple-400'
+                    }`}>
+                      {ideia.status?.replace('_', ' ')}
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-gray-400 mb-3 line-clamp-2">{ideia.descricao}</p>
+
+                  {ideia.feedback_admin && (
+                    <div className="mt-3 pt-3 border-t border-border bg-blue-500/5 rounded-lg p-3">
+                      <p className="text-xs text-blue-400 mb-1 font-semibold flex items-center gap-2">
+                        <CheckCircle2 size={14} />
+                        Feedback da Equipe:
+                      </p>
+                      <p className="text-sm text-gray-300">{ideia.feedback_admin}</p>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-600 mt-3">
+                    Enviado em {formatDate(ideia.createdAt)}
+                  </p>
+                </div>
+              ))}
             </div>
           </Card>
         )}
