@@ -44,7 +44,7 @@ const navItems: NavItem[] = [
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { profile, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -95,12 +95,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-yellow-500 flex items-center justify-center">
                 <span className="text-sm font-bold text-black">
-                  {user?.name?.charAt(0).toUpperCase()}
+                  {profile?.name?.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{user?.name}</p>
-                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                <p className="text-sm font-medium text-white truncate">{profile?.name}</p>
+                <p className="text-xs text-gray-500 truncate">{profile?.email}</p>
               </div>
             </div>
             <button
@@ -180,12 +180,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-yellow-500 flex items-center justify-center">
                   <span className="text-sm font-bold text-black">
-                    {user?.name?.charAt(0).toUpperCase()}
+                    {profile?.name?.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{user?.name}</p>
-                  <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                  <p className="text-sm font-medium text-white truncate">{profile?.name}</p>
+                  <p className="text-xs text-gray-500 truncate">{profile?.email}</p>
                 </div>
               </div>
               <button

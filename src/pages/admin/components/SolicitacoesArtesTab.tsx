@@ -311,7 +311,7 @@ function UploadEntregaModal({
   const [uploadError, setUploadError] = useState('');
   const [saving, setSaving] = useState(false);
 
-  async function handleUploadComplete(downloadURL: string, storagePath: string, fileName: string) {
+  async function handleUploadComplete(downloadURL: string, _storagePath: string, _fileName: string) {
     if (!solicitacao.id) return;
 
     setSaving(true);

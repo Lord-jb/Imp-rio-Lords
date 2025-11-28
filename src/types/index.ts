@@ -87,6 +87,7 @@ export interface SolicitacaoDesign {
     versao: number;
     entregueEm: any;
   }>;
+  links_entrega?: string[]; // URLs diretas de entrega (compatibilidade)
   comentarios?: Array<{
     autor: string;
     mensagem: string;

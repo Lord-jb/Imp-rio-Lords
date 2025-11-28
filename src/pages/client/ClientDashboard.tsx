@@ -106,10 +106,10 @@ export function ClientDashboard() {
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-2">
-                  Olá, <span className="text-secondary animate-pulse">{cliente?.nome?.split(' ')[0] || 'Cliente'}</span>
+                  Olá, <span className="text-secondary animate-pulse">{cliente?.nome?.split(' ')[0] || 'Cliente'}</span>!
                 </h1>
                 <p className="text-gray-400 text-lg">
-                  Seu centro de comando em tempo real. Acompanhe resultados e gerencie sua presença digital.
+                  Acompanhe suas campanhas, resultados e gerencie sua presença digital em tempo real.
                 </p>
               </div>
               <div className="flex gap-3">
@@ -495,20 +495,24 @@ export function ClientDashboard() {
                       Criado em {formatDate(sol.createdAt)}
                     </p>
 
-                    {sol.entregas.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-border">
-                        <p className="text-xs text-gray-400 mb-2 font-semibold">📎 Entregas:</p>
-                        <div className="space-y-1">
-                          {sol.entregas.map((entrega, idx) => (
+                    {sol.links_entrega && sol.links_entrega.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-border bg-green-500/5 rounded-lg p-3">
+                        <p className="text-xs text-green-400 mb-2 font-semibold flex items-center gap-2">
+                          <CheckCircle2 size={14} />
+                          Arquivos Entregues:
+                        </p>
+                        <div className="space-y-2">
+                          {sol.links_entrega.map((link, idx) => (
                             <a
                               key={idx}
-                              href={entrega.url}
+                              href={link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 text-secondary text-sm hover:underline hover:text-secondary/80 transition-colors"
+                              className="flex items-center gap-2 text-secondary text-sm hover:underline hover:text-secondary/80 transition-colors bg-black/20 px-3 py-2 rounded-lg"
                             >
                               <FileText size={14} />
-                              {entrega.nome}
+                              Arquivo {idx + 1}
+                              <ArrowUpRight size={12} className="ml-auto" />
                             </a>
                           ))}
                         </div>
