@@ -1,14 +1,17 @@
 // pages/admin/components/SolicitacoesArtesTab.tsx
 import { useState } from 'react';
-import { Trash2, Upload, CheckCircle2, Clock, AlertCircle, FileUp } from 'lucide-react';
+import { Trash2, Upload, CheckCircle2, Clock, AlertCircle, FileUp, MessageSquare, X } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { Select } from '../../../components/ui/Select';
 import { FileUpload } from '../../../components/ui/FileUpload';
+import { CommentsSection } from '../../../components/comments/CommentsSection';
 import type { Cliente, SolicitacaoDesign } from '../../../types';
 import { formatDate } from '../../../lib/utils';
 import { db } from '../../../lib/firebase';
 import { doc, updateDoc, deleteDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import { createNotification } from '../../../hooks/useNotifications';
+import { useAuth } from '../../../hooks/useAuth';
 
 interface SolicitacoesArtesTabProps {
   clientes: Cliente[];
@@ -16,9 +19,11 @@ interface SolicitacoesArtesTabProps {
 }
 
 export function SolicitacoesArtesTab({ clientes, solicitacoes }: SolicitacoesArtesTabProps) {
+  const { session, profile } = useAuth();
   const [selectedCliente, setSelectedCliente] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [uploadingSol, setUploadingSol] = useState<SolicitacaoDesign | null>(null);
+  const [commentsSol, setCommentsSol] = useState<SolicitacaoDesign | null>(null);
 
   const solicitacoesFiltradas = solicitacoes.filter(sol => {
     const clienteMatch = selectedCliente ? sol.uid_cliente === selectedCliente : true;
@@ -45,7 +50,7 @@ export function SolicitacoesArtesTab({ clientes, solicitacoes }: SolicitacoesArt
       // Atualizar status da solicitação
       await updateDoc(doc(db, 'solicitacoes_design', solId), { status });
 
-      // Se status = 'entregue', incrementar artesUsadas do cliente
+      // Se status = 'entregue', incrementar artesUsadas do cliente e notificar
       if (status === 'entregue') {
         const solicitacao = solicitacoes.find(s => s.id === solId);
         if (solicitacao) {
@@ -57,7 +62,30 @@ export function SolicitacoesArtesTab({ clientes, solicitacoes }: SolicitacoesArt
             await updateDoc(userRef, {
               artesUsadas: currentArtes + 1,
             });
+
+            // Criar notificação para o cliente
+            await createNotification({
+              uid_destinatario: solicitacao.uid_cliente,
+              tipo: 'sucesso',
+              titulo: '🎨 Arte Entregue!',
+              mensagem: `Sua solicitação "${solicitacao.tipo_arte}" foi entregue e está disponível para visualização.`,
+              link: '/client',
+            });
           }
+        }
+      }
+
+      // Notificar quando mudar para em_producao
+      if (status === 'em_producao') {
+        const solicitacao = solicitacoes.find(s => s.id === solId);
+        if (solicitacao) {
+          await createNotification({
+            uid_destinatario: solicitacao.uid_cliente,
+            tipo: 'info',
+            titulo: '⚙️ Arte em Produção',
+            mensagem: `Sua solicitação "${solicitacao.tipo_arte}" está sendo produzida pela nossa equipe.`,
+            link: '/client',
+          });
         }
       }
     } catch (error: any) {
@@ -286,6 +314,17 @@ export function SolicitacoesArtesTab({ clientes, solicitacoes }: SolicitacoesArt
                 )}
               </div>
 
+              {/* Botão de Comentários */}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setCommentsSol(sol)}
+                className="w-full mt-2"
+              >
+                <MessageSquare size={16} className="mr-2" />
+                Comentários
+              </Button>
+
               <p className="text-xs text-gray-600 mt-3 pt-3 border-t border-border">
                 Criado em {formatDate(sol.createdAt)}
               </p>
@@ -304,6 +343,38 @@ export function SolicitacoesArtesTab({ clientes, solicitacoes }: SolicitacoesArt
               : 'Aguarde as solicitações dos clientes'}
           </p>
         </Card>
+      )}
+
+      {/* Comments Modal */}
+      {commentsSol && session?.uid && profile?.name && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h2 className="text-2xl font-bold">{commentsSol.titulo}</h2>
+                <p className="text-sm text-neutral-400 mt-1">
+                  Tipo: {commentsSol.tipo} | Status: {commentsSol.status?.replace('_', ' ')}
+                </p>
+              </div>
+              <button
+                onClick={() => setCommentsSol(null)}
+                className="p-2 hover:bg-neutral-800 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-neutral-400" />
+              </button>
+            </div>
+
+            {commentsSol.id && (
+              <CommentsSection
+                solicitacaoId={commentsSol.id}
+                currentUserId={session.uid}
+                currentUserName={profile.name}
+                currentUserRole="admin"
+                currentUserAvatar={profile.avatar}
+              />
+            )}
+          </div>
+        </div>
       )}
 
       {/* Upload Modal */}

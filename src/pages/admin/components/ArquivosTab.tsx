@@ -9,6 +9,7 @@ import type { Cliente, ArquivoCompartilhado } from '../../../types';
 import { formatDate } from '../../../lib/utils';
 import { db } from '../../../lib/firebase';
 import { collection, addDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { createNotification } from '../../../hooks/useNotifications';
 
 interface ArquivosTabProps {
   clientes: Cliente[];
@@ -173,6 +174,16 @@ function ArquivoModal({
         storagePath: formData.storagePath,
         createdAt: Timestamp.now(),
       });
+
+      // Criar notificação para o cliente
+      await createNotification({
+        uid_destinatario: formData.uid_cliente,
+        tipo: 'info',
+        titulo: '📁 Novo Arquivo Compartilhado',
+        mensagem: `Um novo arquivo "${formData.titulo}" foi compartilhado com você na categoria ${formData.categoria}.`,
+        link: '/client',
+      });
+
       setFeedback('✅ Arquivo compartilhado com o cliente com sucesso!');
 
       setTimeout(() => {

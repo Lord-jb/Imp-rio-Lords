@@ -98,7 +98,18 @@ export interface SolicitacaoDesign {
   createdAt: any;
   updatedAt: any;
 }
- 
+
+export interface ComentarioSolicitacao {
+  id?: string;
+  solicitacao_id: string;
+  uid_autor: string;
+  nome_autor: string;
+  role_autor: 'admin' | 'client';
+  avatar_autor?: string;
+  mensagem: string;
+  createdAt: any;
+}
+
 export interface Lead {
   id?: string;
   uid_cliente: string;
@@ -120,10 +131,14 @@ export interface Lead {
 
 export interface Notificacao {
   id?: string;
-  uid_cliente: string;
+  uid_destinatario: string; // Renomeado de uid_cliente para ser mais genérico
+  uid_cliente?: string; // Mantido para compatibilidade
+  uid_remetente?: string; // Quem criou a notificação
+  titulo: string; // Novo campo
   mensagem: string;
-  tipo: 'info' | 'campanha' | 'design' | 'agenda' | 'arquivo' | 'lead' | 'financeiro';
+  tipo: 'info' | 'sucesso' | 'alerta' | 'erro' | 'campanha' | 'design' | 'agenda' | 'arquivo' | 'lead' | 'financeiro';
   lido: boolean;
+  lido_em?: any; // Timestamp quando foi lida
   link?: string;
   createdAt: any;
 }

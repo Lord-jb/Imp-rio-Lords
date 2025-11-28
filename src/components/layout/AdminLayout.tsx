@@ -14,10 +14,10 @@ import {
   LogOut,
   Menu,
   X,
-  Bell,
   Search
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { NotificationCenter } from '../notifications/NotificationCenter';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -44,7 +44,7 @@ const navItems: NavItem[] = [
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { profile, signOut } = useAuth();
+  const { profile, session, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -227,10 +227,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
             {/* Actions */}
             <div className="flex items-center gap-3">
-              <button className="relative p-2 hover:bg-neutral-800 rounded-lg transition-colors">
-                <Bell className="w-5 h-5 text-neutral-400" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-primary-600 rounded-full"></span>
-              </button>
+              {session?.uid && <NotificationCenter userId={session.uid} />}
             </div>
           </div>
         </header>

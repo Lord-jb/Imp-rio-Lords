@@ -1,9 +1,8 @@
 // components/layout/Header.tsx
 import { Link } from 'react-router-dom';
-import { 
-  LogOut, 
-  User, 
-  Bell,
+import {
+  LogOut,
+  User,
   ChevronDown,
   Zap,
   Menu,
@@ -11,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { NotificationCenter } from '../notifications/NotificationCenter';
 
 export function Header() {
   const { session, profile, signOut } = useAuth();
@@ -48,10 +48,9 @@ export function Header() {
           {/* Right Section */}
           <div className="flex items-center gap-3">
             {/* Notifications - Desktop */}
-            <button className="hidden md:flex relative p-2.5 hover:bg-gray-800 rounded-lg transition-colors group">
-              <Bell size={20} className="text-gray-400 group-hover:text-secondary transition-colors" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            </button>
+            <div className="hidden md:block">
+              {session?.uid && <NotificationCenter userId={session.uid} />}
+            </div>
 
             {/* User Menu - Desktop */}
             <div className="hidden md:block relative">
@@ -187,13 +186,9 @@ export function Header() {
             </div>
 
             {/* Notifications Mobile */}
-            <button className="w-full flex items-center justify-between px-2 py-3 rounded-lg hover:bg-gray-800 transition-colors mb-2">
-              <div className="flex items-center gap-3">
-                <Bell size={20} className="text-gray-400" />
-                <span className="text-sm font-medium">Notificações</span>
-              </div>
-              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            </button>
+            <div className="mb-2">
+              {session?.uid && <NotificationCenter userId={session.uid} />}
+            </div>
 
             {/* Logout Mobile */}
             <button
