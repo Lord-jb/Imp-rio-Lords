@@ -49,8 +49,27 @@ export function ClientDashboard() {
   const [showSolicitacaoModal, setShowSolicitacaoModal] = useState(false);
   const [showIdeiaModal, setShowIdeiaModal] = useState(false);
 
-  const { data: clientes } = useFirestoreCollection<Cliente>('clientes');
-  const cliente = clientes.find((c) => c.uid === uid);
+  // Buscar dados do usuário da collection 'users'
+  const { data: usersRaw } = useFirestoreCollection<any>('users');
+  const userData = usersRaw.find((u: any) => u.id === uid);
+
+  // Mapear para o formato Cliente
+  const cliente: Cliente | undefined = userData ? {
+    uid: userData.id,
+    nome: userData.name,
+    email_login: userData.email,
+    plano_nome: userData.planoNome || '',
+    status_site: userData.statusSite || 'Em Análise',
+    saldo_carteira: userData.saldo || 0,
+    plano_artes_total: userData.artesTotal || 0,
+    artes_usadas: userData.artesUsadas || 0,
+    permissoes: userData.permissoes || {
+      podeSolicitarDesign: true,
+      recebeLeads: false,
+    },
+    createdAt: userData.createdAt,
+    updatedAt: userData.updatedAt,
+  } as Cliente : undefined;
 
   const { data: campanhas } = useFirestoreCollection<Campanha>('campanhas', [
     where('uid_cliente', '==', uid),

@@ -17,6 +17,8 @@ export interface UserClient {
   planoNome?: string;
   saldo?: number;
   artesTotal?: number;
+  artesUsadas?: number;
+  ultimoResetArtes?: any; // Timestamp do último reset mensal
   statusSite?: string;
   permissoes?: {
     podeSolicitarDesign: boolean;
@@ -108,6 +110,8 @@ export interface Lead {
   status: 'novo' | 'contatado' | 'em_negociacao' | 'ganho' | 'perdido';
   valor_potencial?: number;
   observacoes?: string;
+  print_url?: string; // URL do print/screenshot do lead
+  motivo_desinteresse?: string; // Motivo se status for 'perdido'
   data_contato?: any;
   data_conversao?: any;
   createdAt: any;

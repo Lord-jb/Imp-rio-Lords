@@ -8,7 +8,7 @@ import { FileUpload } from '../../../components/ui/FileUpload';
 import type { Cliente, SolicitacaoDesign } from '../../../types';
 import { formatDate } from '../../../lib/utils';
 import { db } from '../../../lib/firebase';
-import { doc, updateDoc, deleteDoc, arrayUnion } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, arrayUnion, getDoc } from 'firebase/firestore';
 
 interface SolicitacoesArtesTabProps {
   clientes: Cliente[];
@@ -42,7 +42,24 @@ export function SolicitacoesArtesTab({ clientes, solicitacoes }: SolicitacoesArt
 
   async function handleUpdateStatus(solId: string, status: string) {
     try {
+      // Atualizar status da solicitação
       await updateDoc(doc(db, 'solicitacoes_design', solId), { status });
+
+      // Se status = 'entregue', incrementar artesUsadas do cliente
+      if (status === 'entregue') {
+        const solicitacao = solicitacoes.find(s => s.id === solId);
+        if (solicitacao) {
+          const userRef = doc(db, 'users', solicitacao.uid_cliente);
+          const userSnap = await getDoc(userRef);
+
+          if (userSnap.exists()) {
+            const currentArtes = userSnap.data().artesUsadas || 0;
+            await updateDoc(userRef, {
+              artesUsadas: currentArtes + 1,
+            });
+          }
+        }
+      }
     } catch (error: any) {
       alert(error.message || 'Erro ao atualizar status');
     }

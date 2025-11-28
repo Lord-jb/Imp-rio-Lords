@@ -5,6 +5,7 @@ import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
+import { FileUpload } from '../../../components/ui/FileUpload';
 import type { Cliente, Lead } from '../../../types';
 import { formatCurrency, formatDate } from '../../../lib/utils';
 import { db } from '../../../lib/firebase';
@@ -162,9 +163,12 @@ function LeadModal({
     cidade: lead?.cidade || '',
     status: lead?.status || 'novo',
     valor_potencial: lead?.valor_potencial || 0,
+    print_url: lead?.print_url || '',
+    motivo_desinteresse: lead?.motivo_desinteresse || '',
   });
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [uploadError, setUploadError] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -172,26 +176,24 @@ function LeadModal({
     setFeedback('');
 
     try {
+      const leadData = {
+        uid_cliente: formData.uid_cliente,
+        nome: formData.nome,
+        email: formData.email,
+        telefone: formData.telefone,
+        cidade: formData.cidade,
+        status: formData.status,
+        valor_potencial: formData.valor_potencial,
+        print_url: formData.print_url || undefined,
+        motivo_desinteresse: formData.motivo_desinteresse || undefined,
+      };
+
       if (lead?.id) {
-        await updateDoc(doc(db, 'leads', lead.id), {
-          uid_cliente: formData.uid_cliente,
-          nome: formData.nome,
-          email: formData.email,
-          telefone: formData.telefone,
-          cidade: formData.cidade,
-          status: formData.status,
-          valor_potencial: formData.valor_potencial,
-        });
+        await updateDoc(doc(db, 'leads', lead.id), leadData);
         setFeedback('Lead atualizado com sucesso!');
       } else {
         await addDoc(collection(db, 'leads'), {
-          uid_cliente: formData.uid_cliente,
-          nome: formData.nome,
-          email: formData.email,
-          telefone: formData.telefone,
-          cidade: formData.cidade,
-          status: formData.status,
-          valor_potencial: formData.valor_potencial,
+          ...leadData,
           createdAt: Timestamp.now(),
         });
         setFeedback('Lead criado com sucesso!');
@@ -291,6 +293,51 @@ function LeadModal({
               onChange={(e) => setFormData({ ...formData, valor_potencial: Number(e.target.value) })}
             />
           </div>
+
+          {/* Upload de Print do Lead */}
+          {!lead && formData.uid_cliente && (
+            <FileUpload
+              label="Print/Screenshot do Lead (opcional)"
+              folder={`leads/${formData.uid_cliente}`}
+              onUploadComplete={(downloadURL) => {
+                setFormData({ ...formData, print_url: downloadURL });
+                setUploadError('');
+              }}
+              onError={(error) => setUploadError(error)}
+              accept="image/*"
+            />
+          )}
+
+          {lead && formData.print_url && (
+            <div>
+              <label className="block text-sm font-medium mb-2">Print do Lead</label>
+              <a
+                href={formData.print_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-secondary hover:underline text-sm"
+              >
+                Ver print anexado →
+              </a>
+            </div>
+          )}
+
+          {/* Motivo de Desinteresse (apenas se status = perdido) */}
+          {formData.status === 'perdido' && (
+            <div>
+              <label className="block text-sm font-medium mb-2">Motivo de Desinteresse</label>
+              <textarea
+                value={formData.motivo_desinteresse}
+                onChange={(e) => setFormData({ ...formData, motivo_desinteresse: e.target.value })}
+                className="w-full px-4 py-3 bg-gray-800 border border-border rounded-lg text-white min-h-[80px]"
+                placeholder="Por que o lead foi perdido?"
+              />
+            </div>
+          )}
+
+          {uploadError && (
+            <p className="text-red-500 text-sm text-center">{uploadError}</p>
+          )}
 
           <div className="flex gap-4 mt-6">
             <Button type="submit" disabled={loading} className="flex-1">
