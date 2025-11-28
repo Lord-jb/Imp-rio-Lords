@@ -10,6 +10,7 @@ import { Arquivos } from './pages/admin/Arquivos';
 import { InsightsPage } from './pages/admin/InsightsPage';
 import { IdeiasPage } from './pages/admin/IdeiasPage';
 import { Financeiro } from './pages/admin/Financeiro';
+import { Integracoes } from './pages/admin/Integracoes';
 import { ClientDashboard } from './pages/client/ClientDashboard';
 import { AuthCallback } from './pages/AuthCallback';
 import PrivateRoute from './routes/PrivateRoute';
@@ -100,6 +101,14 @@ function App() {
             element={
               <RoleRoute role="admin">
                 <Financeiro />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/admin/integracoes"
+            element={
+              <RoleRoute role="admin">
+                <Integracoes />
               </RoleRoute>
             }
           />

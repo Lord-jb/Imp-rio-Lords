@@ -11,6 +11,7 @@ import {
   Lightbulb,
   MessageSquare,
   DollarSign,
+  Plug,
   LogOut,
   Menu,
   X,
@@ -40,6 +41,7 @@ const navItems: NavItem[] = [
   { path: '/admin/insights', label: 'Insights', icon: Lightbulb },
   { path: '/admin/ideias', label: 'Ideias', icon: MessageSquare },
   { path: '/admin/financeiro', label: 'Financeiro', icon: DollarSign },
+  { path: '/admin/integracoes', label: 'Integrações', icon: Plug },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {

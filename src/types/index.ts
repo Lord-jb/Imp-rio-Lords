@@ -196,6 +196,40 @@ export interface Ideia {
   updatedAt: any;
 }
 
+export interface IntegracaoAPI {
+  id?: string;
+  uid_cliente: string;
+  plataforma: 'meta_ads' | 'google_ads' | 'tiktok_ads';
+  nome_conexao: string; // Nome dado pelo usuário
+  conta_id: string; // ID da conta na plataforma
+  access_token?: string; // Armazenado criptografado
+  refresh_token?: string;
+  token_expira_em?: any;
+  status: 'ativa' | 'expirada' | 'erro';
+  ultima_sincronizacao?: any;
+  metricas_permissoes: string[]; // Quais métricas pode acessar
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface MetricasPlataforma {
+  id?: string;
+  integracao_id: string;
+  uid_cliente: string;
+  plataforma: 'meta_ads' | 'google_ads' | 'tiktok_ads';
+  data_referencia: any; // Data das métricas
+  impressoes: number;
+  cliques: number;
+  ctr: number;
+  investimento: number;
+  conversoes: number;
+  custo_por_conversao: number;
+  roas: number;
+  alcance: number;
+  dados_completos: any; // JSON com todos os dados da API
+  sincronizado_em: any;
+}
+
 export interface Financeiro {
   id?: string;
   uid_cliente: string;
