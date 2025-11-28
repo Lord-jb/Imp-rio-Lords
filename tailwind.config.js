@@ -8,11 +8,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Paleta profissional e clean
-        background: '#f8f9fa',
-        'background-dark': '#ffffff',
+        // Paleta profissional dark theme
+        background: '#0a0a0b',
+        'background-light': '#111113',
 
-        // Primary - Azul profissional
+        // Primary - Azul profissional (mantido)
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',
@@ -26,7 +26,7 @@ export default {
           900: '#1e3a8a',
         },
 
-        // Secondary - Verde elegante
+        // Secondary - Verde elegante (mantido)
         secondary: {
           50: '#f0fdf4',
           100: '#dcfce7',
@@ -40,7 +40,7 @@ export default {
           900: '#14532d',
         },
 
-        // Accent - Roxo sofisticado
+        // Accent - Roxo sofisticado (mantido)
         accent: {
           50: '#faf5ff',
           100: '#f3e8ff',
@@ -54,22 +54,23 @@ export default {
           900: '#581c87',
         },
 
-        // Neutral - Cinzas profissionais
+        // Neutral - Cinzas para dark theme
         neutral: {
-          50: '#f9fafb',
-          100: '#f3f4f6',
-          200: '#e5e7eb',
-          300: '#d1d5db',
-          400: '#9ca3af',
-          500: '#6b7280',
-          600: '#4b5563',
-          700: '#374151',
-          800: '#1f2937',
-          900: '#111827',
+          50: '#fafafa',
+          100: '#f4f4f5',
+          200: '#e4e4e7',
+          300: '#d4d4d8',
+          400: '#a1a1aa',
+          500: '#71717a',
+          600: '#52525b',
+          700: '#3f3f46',
+          800: '#27272a',
+          900: '#18181b',
+          950: '#09090b',
         },
 
-        border: '#e5e7eb',
-        'border-dark': '#d1d5db',
+        border: '#27272a',
+        'border-light': '#3f3f46',
       },
       boxShadow: {
         'soft': '0 2px 8px rgba(0, 0, 0, 0.05)',

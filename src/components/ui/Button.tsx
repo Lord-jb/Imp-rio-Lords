@@ -19,7 +19,7 @@ export function Button({
   const variantClasses = {
     primary: 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 shadow-sm hover:shadow',
     secondary: 'bg-secondary-600 text-white hover:bg-secondary-700 active:bg-secondary-800 shadow-sm hover:shadow',
-    ghost: 'bg-transparent text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
+    ghost: 'bg-transparent text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800'
   };
 
   const sizeClasses = {
