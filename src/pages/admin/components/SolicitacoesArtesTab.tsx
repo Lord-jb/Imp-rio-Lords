@@ -68,7 +68,7 @@ export function SolicitacoesArtesTab({ clientes, solicitacoes }: SolicitacoesArt
               uid_destinatario: solicitacao.uid_cliente,
               tipo: 'sucesso',
               titulo: '🎨 Arte Entregue!',
-              mensagem: `Sua solicitação "${solicitacao.tipo_arte}" foi entregue e está disponível para visualização.`,
+              mensagem: `Sua solicitação "${solicitacao.tipo}" foi entregue e está disponível para visualização.`,
               link: '/client',
             });
           }
@@ -83,7 +83,7 @@ export function SolicitacoesArtesTab({ clientes, solicitacoes }: SolicitacoesArt
             uid_destinatario: solicitacao.uid_cliente,
             tipo: 'info',
             titulo: '⚙️ Arte em Produção',
-            mensagem: `Sua solicitação "${solicitacao.tipo_arte}" está sendo produzida pela nossa equipe.`,
+            mensagem: `Sua solicitação "${solicitacao.tipo}" está sendo produzida pela nossa equipe.`,
             link: '/client',
           });
         }

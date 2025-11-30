@@ -1,6 +1,7 @@
 // pages/client/ClientDashboard.tsx
 import { useState, useEffect } from 'react';
 import { 
+  X,
   Wallet, 
   Globe, 
   Palette, 
@@ -21,7 +22,8 @@ import {
   ArrowUpRight,
   Clock,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  MessageSquare
 } from 'lucide-react';
 import { where, doc as firestoreDoc, updateDoc as firestoreUpdateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
@@ -44,10 +46,13 @@ import type {
   Insight
 } from '../../types';
 import { formatCurrency, formatDate } from '../../lib/utils';
+import { MinhasSolicitacoesTab } from './components/MinhasSolicitacoesTab';  // ← ADICIONAR
+
 
 export function ClientDashboard() {
   const { session } = useAuth();
   const uid = session?.uid || '';
+  const [showSolicitacoesTab, setShowSolicitacoesTab] = useState(false); // ← ADICIONE ESTA LINHA
   const [showSolicitacaoModal, setShowSolicitacaoModal] = useState(false);
   const [showIdeiaModal, setShowIdeiaModal] = useState(false);
 
@@ -491,113 +496,154 @@ export function ClientDashboard() {
           </Card>
         </div>
 
-        {/* Solicitações de Artes e Leads */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Solicitações de Design */}
-          <Card>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="bg-orange-500/20 rounded-lg p-2">
-                  <Palette className="text-orange-500" size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">Solicitações de Artes</h3>
-                  <p className="text-sm text-gray-400">Acompanhe suas criações</p>
-                </div>
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+  {/* Solicitações de Design */}
+  <Card>
+    <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center gap-3">
+        <div className="bg-orange-500/20 rounded-lg p-2">
+          <Palette className="text-orange-500" size={24} />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold">Solicitações de Artes</h3>
+          <p className="text-sm text-gray-400">Acompanhe suas criações</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        {solicitacoes.length > 0 && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setShowSolicitacoesTab(true)}
+            className="flex items-center gap-2 hover:bg-orange-500/20 transition-all"
+          >
+            <MessageSquare size={16} />
+            Ver Todas
+          </Button>
+        )}
+        <span className="bg-orange-500/20 text-orange-400 px-3 py-1.5 rounded-full text-xs font-bold">
+          {solicitacoesPendentes.length} pendentes
+        </span>
+      </div>
+    </div>
+    
+    {solicitacoes.length === 0 ? (
+      <div className="text-center py-12 bg-gray-800/30 rounded-xl border border-dashed border-gray-700">
+        <Palette className="mx-auto text-gray-600 mb-4" size={48} />
+        <p className="text-gray-400 mb-2">Nenhuma solicitação ainda</p>
+        <Button onClick={() => setShowSolicitacaoModal(true)} className="mt-4">
+          Solicitar Primeira Arte
+        </Button>
+      </div>
+    ) : (
+      <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+        {solicitacoes.slice(0, 5).map((sol) => (
+          <div
+            key={sol.id}
+            className="border border-border rounded-lg p-4 hover:border-orange-500/50 hover:bg-gray-800/50 transition-all duration-300 group cursor-pointer"
+            onClick={() => setShowSolicitacoesTab(true)}
+          >
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex-1">
+                <h4 className="font-semibold text-lg mb-1 group-hover:text-orange-400 transition-colors">
+                  {sol.titulo}
+                </h4>
+                <p className="text-sm text-gray-400">{sol.tipo}</p>
               </div>
-              <span className="bg-orange-500/20 text-orange-400 px-4 py-2 rounded-full text-sm font-bold">
-                {solicitacoesPendentes.length} pendentes
+              <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 whitespace-nowrap ${
+                sol.status === 'entregue' ? 'bg-green-500/20 text-green-400' :
+                sol.status === 'em_producao' ? 'bg-blue-500/20 text-blue-400' :
+                sol.status === 'revisao' ? 'bg-yellow-500/20 text-yellow-400' :
+                'bg-gray-500/20 text-gray-400'
+              }`}>
+                {sol.status === 'entregue' && <CheckCircle2 size={14} />}
+                {sol.status === 'em_producao' && <Activity size={14} />}
+                {sol.status === 'revisao' && <AlertCircle size={14} />}
+                {sol.status?.replace('_', ' ') || 'pendente'}
               </span>
             </div>
-            
-            {solicitacoes.length === 0 ? (
-              <div className="text-center py-12 bg-gray-800/30 rounded-xl border border-dashed border-gray-700">
-                <Palette className="mx-auto text-gray-600 mb-4" size={48} />
-                <p className="text-gray-400 mb-2">Nenhuma solicitação ainda</p>
-                <Button onClick={() => setShowSolicitacaoModal(true)} className="mt-4">
-                  Solicitar Primeira Arte
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                {solicitacoes.map((sol) => (
-                  <div
-                    key={sol.id}
-                    className="border border-border rounded-lg p-4 hover:border-orange-500/50 hover:bg-gray-800/50 transition-all duration-300"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-lg mb-1">{sol.titulo}</h4>
-                        <p className="text-sm text-gray-400">{sol.tipo}</p>
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${
-                        sol.status === 'entregue' ? 'bg-green-500/20 text-green-400' :
-                        sol.status === 'em_producao' ? 'bg-blue-500/20 text-blue-400' :
-                        sol.status === 'revisao' ? 'bg-yellow-500/20 text-yellow-400' :
-                        'bg-gray-500/20 text-gray-400'
-                      }`}>
-                        {sol.status === 'entregue' && <CheckCircle2 size={14} />}
-                        {sol.status === 'em_producao' && <Activity size={14} />}
-                        {sol.status.replace('_', ' ')}
-                      </span>
-                    </div>
 
-                    <p className="text-xs text-gray-500 mb-3">
-                      Criado em {formatDate(sol.createdAt)}
+            <p className="text-xs text-gray-500 mb-3 flex items-center gap-2">
+              <Clock size={12} />
+              {formatDate(sol.createdAt)}
+            </p>
+
+            {sol.links_entrega && sol.links_entrega.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-border bg-green-500/5 rounded-lg p-3">
+                <p className="text-xs text-green-400 mb-2 font-semibold flex items-center gap-2">
+                  <CheckCircle2 size={14} />
+                  {sol.links_entrega.length} arquivo(s) entregue(s)
+                </p>
+                <div className="space-y-1">
+                  {sol.links_entrega.slice(0, 2).map((link, idx) => (
+                    <a
+                      key={idx}
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-2 text-secondary text-xs hover:underline hover:text-secondary/80 transition-colors bg-black/20 px-2 py-1.5 rounded"
+                    >
+                      <FileText size={12} />
+                      Arquivo {idx + 1}
+                      <ArrowUpRight size={10} className="ml-auto" />
+                    </a>
+                  ))}
+                  {sol.links_entrega.length > 2 && (
+                    <p className="text-xs text-gray-500 text-center pt-1">
+                      +{sol.links_entrega.length - 2} arquivo(s)
                     </p>
-
-                    {sol.links_entrega && sol.links_entrega.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-border bg-green-500/5 rounded-lg p-3">
-                        <p className="text-xs text-green-400 mb-2 font-semibold flex items-center gap-2">
-                          <CheckCircle2 size={14} />
-                          Arquivos Entregues:
-                        </p>
-                        <div className="space-y-2">
-                          {sol.links_entrega.map((link, idx) => (
-                            <a
-                              key={idx}
-                              href={link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 text-secondary text-sm hover:underline hover:text-secondary/80 transition-colors bg-black/20 px-3 py-2 rounded-lg"
-                            >
-                              <FileText size={14} />
-                              Arquivo {idx + 1}
-                              <ArrowUpRight size={12} className="ml-auto" />
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  )}
+                </div>
               </div>
             )}
-          </Card>
 
-          {/* Leads Recebidos */}
-          {cliente?.permissoes?.recebeLeads && (
-            <Card>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-500/20 rounded-lg p-2">
-                    <Users className="text-green-500" size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold">Meus Leads</h3>
-                    <p className="text-sm text-gray-400">Gerencie suas oportunidades de negócio</p>
-                  </div>
-                </div>
-                <span className="bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-sm font-bold">
-                  {leads.length} total
-                </span>
-              </div>
+            {/* Indicador de interação */}
+            <div className="mt-3 pt-3 border-t border-border flex items-center justify-center gap-2 text-orange-400 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+              <MessageSquare size={16} />
+              Clique para ver detalhes e comentários
+            </div>
+          </div>
+        ))}
 
-              <LeadsListClient leads={leads} />
-            </Card>
-          )}
+        {solicitacoes.length > 5 && (
+          <div className="text-center pt-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowSolicitacoesTab(true)}
+              className="text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 transition-all"
+            >
+              Ver todas as {solicitacoes.length} solicitações
+              <ArrowUpRight size={16} className="ml-2" />
+            </Button>
+          </div>
+        )}
+      </div>
+    )}
+  </Card>
+{/* Leads Recebidos */}
+  {cliente?.permissoes?.recebeLeads && (
+    <Card>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="bg-green-500/20 rounded-lg p-2">
+            <Users className="text-green-500" size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold">Meus Leads</h3>
+            <p className="text-sm text-gray-400">Gerencie suas oportunidades de negócio</p>
+          </div>
         </div>
+        <span className="bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-sm font-bold">
+          {leads.length} total
+        </span>
+      </div>
 
+      <LeadsListClient leads={leads} />
+    </Card>
+  )}
+</div>
         {/* Arquivos e Entregas */}
         <Card className="mb-8">
           <div className="flex items-center justify-between mb-6">
@@ -822,6 +868,62 @@ export function ClientDashboard() {
             </Button>
           </div>
         </Card>
+        {showSolicitacoesTab && (
+  <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 overflow-y-auto animate-fadeIn">
+    <div className="min-h-screen px-4 py-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header do Modal */}
+        <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-6 mb-6 sticky top-4 z-10 shadow-2xl">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="bg-orange-500/20 rounded-xl p-3">
+                <Palette className="text-orange-500" size={28} />
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold mb-1">Minhas Solicitações de Arte</h2>
+                <p className="text-gray-400">Visualize, comente e acompanhe suas criações em tempo real</p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              onClick={() => setShowSolicitacoesTab(false)}
+              className="flex items-center gap-2 hover:bg-red-500/10 hover:text-red-400 transition-all"
+              size="lg"
+            >
+              <X size={24} />
+              Fechar
+            </Button>
+          </div>
+
+          {/* Stats rápidas no header */}
+          <div className="grid grid-cols-3 gap-4 mt-6">
+            <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3 text-center">
+              <p className="text-orange-400 font-bold text-2xl">{solicitacoesPendentes.length}</p>
+              <p className="text-xs text-gray-400 mt-1">Pendentes</p>
+            </div>
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-center">
+              <p className="text-blue-400 font-bold text-2xl">
+                {solicitacoes.filter(s => s.status === 'em_producao').length}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">Em Produção</p>
+            </div>
+            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 text-center">
+              <p className="text-green-400 font-bold text-2xl">
+                {solicitacoes.filter(s => s.status === 'entregue').length}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">Entregues</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Conteúdo do Modal */}
+        <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-6 shadow-2xl">
+          <MinhasSolicitacoesTab solicitacoes={solicitacoes} />
+        </div>
+      </div>
+    </div>
+  </div>
+)}
       </main>
 
       {/* Modals */}

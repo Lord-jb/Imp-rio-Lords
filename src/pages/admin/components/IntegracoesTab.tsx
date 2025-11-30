@@ -29,7 +29,7 @@ export function IntegracoesTab({ clientes, integracoes, metricas }: IntegracoesT
     setEditingIntegracao(integracao);
     setShowModal(true);
   }
-
+console.log(handleEdit);
   async function handleDelete(integracaoId: string) {
     if (!confirm('Deseja realmente excluir esta integração?')) return;
 

@@ -109,25 +109,28 @@ export interface ComentarioSolicitacao {
   mensagem: string;
   createdAt: any;
 }
-
 export interface Lead {
   id?: string;
   uid_cliente: string;
   nome: string;
   email: string;
   telefone: string;
-  cidade: string;
-  origem?: string;
-  status: 'novo' | 'contatado' | 'em_negociacao' | 'ganho' | 'perdido';
+  cidade?: string;
+  status: 'novo' | 'contatado' | 'em_negociacao' | 'ganho' | 'perdido' | 'em_contato' | 'atendido' | 'convertido' | 'cliente_recusou' | 'sem_interesse';
   valor_potencial?: number;
-  observacoes?: string;
-  print_url?: string; // URL do print/screenshot do lead
-  motivo_desinteresse?: string; // Motivo se status for 'perdido'
-  data_contato?: any;
-  data_conversao?: any;
+  origem?: string;
+  mensagem?: string;
+  print_url?: string;
+  motivo_desinteresse?: string;
+  observacoes?: Array<{
+    texto: string;
+    data: any;
+    autor: string;
+    anexo_url?: string;
+  }>;
   createdAt: any;
-  updatedAt: any;
-}
+  updated_at?: any;
+} 
 
 export interface Notificacao {
   id?: string;

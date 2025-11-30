@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bell, Check, CheckCheck, X, Info, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { Bell, Check, CheckCheck, Info, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 import { formatDate } from '../../lib/utils';
 import { Link } from 'react-router-dom';
